@@ -1,0 +1,16 @@
+# Phase status
+
+This records local implementation and validation, not a claim that external services or hosted pipelines have already run.
+
+| Phase | Implemented                                                                                                       | Validation                                                                     | Remaining                                                                                                  |
+| ----- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| 1     | Domain money, pricing, status/token policy, ports and validated startup configuration                             | Strict TypeScript; domain tests; dependency lint restrictions                  | None for local MVP foundation                                                                              |
+| 2     | Auth routes/proxy, profile, client/project forms, baseline editing, Supabase adapters and RLS migrations          | Browser setup/tenant isolation; PostgreSQL RLS/foreign-key tests               | Apply migrations and verify real Supabase signup/session                                                   |
+| 3     | Baseline review, structured request analysis, immutable analysis baseline/pricing snapshots, Gemini/demo adapters | Valid/invalid provider responses; $220 formula; uncertain/stale analysis tests | Real Gemini smoke test                                                                                     |
+| 4     | Drafts, human pricing choice, override log, client link, approve/reject/cancel/revoke                             | Browser decisions and revoked links; token/state tests                         | Sender shares raw link once; lost links require a replacement draft                                        |
+| 5     | PayPal create/send/read, signature verification, atomic reconciliation, duplicate event protection and dashboards | Fake provider contracts; PostgreSQL transactions; local browser paid flow      | Merchant email, webhook ID and seller UUID; real PayPal sandbox payment/webhook test                       |
+| 6     | Responsive UI, CI checks and preview/production pipeline configuration, docs and After-mode audit                 | Local build/checks and browser checks; UI measurements                         | Audit findings 1/2 need user selection; GitHub/Vercel secrets/environment settings; hosted CI/CD execution |
+
+The audit is [audit 001](../anti-slop/audit-001-2026-10-08.md). No audit-selected UI fixes are applied before the owner chooses numbers. The prototype is not marked production-ready while those findings and the external sandbox checks remain open.
+
+P1 remains outside this implementation: file import/private document storage, payment reminders/intelligence, partner merchant onboarding, milestone billing and average-payment-time analytics. Live invoicing is intentionally restricted to one configured seller; an IDR project is blocked at the PayPal adapter. Original contract balances are not fabricated: collection/outstanding views currently cover change-order invoices only.

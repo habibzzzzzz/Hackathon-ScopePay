@@ -1,0 +1,13 @@
+node_modules
+.next
+.npm-cache
+.data
+test-results
+playwright-report
+package-lock.json
+docs/scopepay prd.md
+docs/design (1).md
+public
+.tmp
+.playwright-browsers
+tests/.tmp-workspace-*

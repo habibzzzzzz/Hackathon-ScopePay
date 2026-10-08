@@ -1,69 +1,132 @@
-import Image from "next/image";
-
+import Link from "next/link";
+import { Brand } from "@/shared/presentation/components";
+import { env } from "@/shared/config/env";
 export default function Home() {
+  const demo = env().APP_MODE === "demo";
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="marketing">
+      <header className="marketing-nav">
+        <Brand />
+        <nav aria-label="Main">
+          <Link href="/features">Workflow</Link>
+          <Link href="/pricing">Pricing</Link>
+          <Link className="button secondary" href="/login">
+            {demo ? "Open demo" : "Sign in"}
+          </Link>
+        </nav>
+      </header>
+      <main id="main-content">
+        <section className="hero">
+          <div>
+            <p className="eyebrow">For freelancers and small agencies</p>
+            <h1>
+              Know your scope.
+              <br />
+              Know your worth.
+              <br />
+              <span>Get paid.</span>
+            </h1>
+            <p className="hero-copy">
+              Compare client requests with your agreed scope, review a clear
+              pricing recommendation, and turn approved additional work into an
+              invoice.
+            </p>
+            <div className="button-row">
+              <Link className="button primary" href="/login">
+                Analyze your project
+              </Link>
+              <Link className="text-link" href="#workflow">
+                See the workflow
+              </Link>
+            </div>
+            <p className="small">
+              {demo
+                ? "Hackathon demo. Sample analysis and payment simulation."
+                : "You approve each charge. Clients pay through PayPal."}
+            </p>
+          </div>
+          <div
+            className="product-preview"
+            aria-label="Illustrative project assessment"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+            <div className="preview-header">
+              <span>HAVN Coffee Website</span>
+              <span className="small">PRD sample</span>
+            </div>
+            <div className="preview-baseline">
+              <p className="small">Agreed scope</p>
+              <p>Website, digital menu, reservation form</p>
+            </div>
+            <div className="assessment-preview">
+              <p className="small">New client request</p>
+              <blockquote>
+                “Can we add Google login and PDF sales reports?”
+              </blockquote>
+              <span className="status status-out_of_scope">Out of scope</span>
+              <p className="small">Illustrative effort: 8–12 hours</p>
+              <div className="preview-price">
+                <span>
+                  Additional charge
+                  <br />
+                  <small>10h × $20 × 1.10</small>
+                </span>
+                <strong>$220.00</strong>
+              </div>
+              <p className="small">
+                Freelancer review required before sending.
+              </p>
+            </div>
+          </div>
+        </section>
+        <section id="workflow" className="workflow-section">
+          <div>
+            <h2>
+              Extra work deserves
+              <br />a clear agreement.
+            </h2>
+            <p>
+              Keep the request, reasoning, price, and client decision together.
+            </p>
+          </div>
+          <ol className="workflow-list">
+            <li>
+              <strong>Define the baseline</strong>
+              <p>
+                Capture what was agreed, what was excluded, and the revision
+                policy.
+              </p>
+            </li>
+            <li>
+              <strong>Assess the new request</strong>
+              <p>
+                Compare it with your scope and review the estimated additional
+                effort.
+              </p>
+            </li>
+            <li>
+              <strong>Agree on the change</strong>
+              <p>
+                Adjust the charge and share an expiring approval link with your
+                client.
+              </p>
+            </li>
+            <li>
+              <strong>Invoice approved work</strong>
+              <p>
+                Send a PayPal invoice. A verified payment event updates the
+                financial status.
+              </p>
+            </li>
+          </ol>
+        </section>
       </main>
+      <footer className="marketing-footer">
+        <span>ScopePay.ai · Hackathon MVP</span>
+        <div>
+          <Link href="/terms">Terms</Link>
+          <Link href="/privacy">Privacy</Link>
+        </div>
+      </footer>
     </div>
   );
 }
