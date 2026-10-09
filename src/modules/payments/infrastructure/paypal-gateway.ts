@@ -175,12 +175,44 @@ export class PayPalGateway implements InvoiceGateway, WebhookVerifier {
         signal: AbortSignal.timeout(20000),
         cache: "no-store",
       });
-      if (!response.ok)
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => null);
+        const safeCode = (value: unknown) =>
+          typeof value === "string" && /^[A-Z][A-Z0-9_]{0,79}$/.test(value)
+            ? value
+            : undefined;
+        const details = Array.isArray(errorBody?.details)
+          ? errorBody.details
+          : [];
+        const issues: string[] = details
+          .map((detail: { issue?: unknown } | null) => safeCode(detail?.issue))
+          .filter((issue: string | undefined): issue is string =>
+            Boolean(issue),
+          )
+          .slice(0, 3);
+        const debugId =
+          typeof errorBody?.debug_id === "string" &&
+          /^[a-zA-Z0-9_-]{1,80}$/.test(errorBody.debug_id)
+            ? errorBody.debug_id
+            : undefined;
+        console.error(
+          JSON.stringify({
+            provider: "paypal",
+            operation: path.endsWith("/send") ? "send_invoice" : method,
+            status: response.status,
+            errorName: safeCode(errorBody?.name),
+            issues,
+            debugId,
+            success: false,
+          }),
+        );
+        const detail = issues.length ? `; ${issues.join(", ")}` : "";
         throw new ApplicationError(
           "PAYPAL_UNAVAILABLE",
-          "PayPal could not complete this operation. Approval is saved; retry safely.",
+          `PayPal rejected this operation (HTTP ${response.status}${detail}). Approval is saved. Check the PayPal account configuration before retrying.`,
           503,
         );
+      }
       console.info(
         JSON.stringify({
           provider: "paypal",

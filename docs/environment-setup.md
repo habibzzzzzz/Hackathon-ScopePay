@@ -40,6 +40,7 @@ The migration embeds baseline and request snapshots in JSONB aggregates. Generat
 - `PAYPAL_ENV=sandbox` uses test accounts. `live` uses the real PayPal environment.
 - `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` must belong to the same REST app and environment as the invoice merchant and webhook.
 - `PAYPAL_MERCHANT_EMAIL`: email of the issuing Business merchant in that environment, not the client's payer email.
+- If invoice creation succeeds but sending fails, verify that this email belongs to the Business sandbox account associated with the REST app's credentials. A saved draft retains its original invoicer; changing the environment alone does not rewrite an existing PayPal draft. Provider failures expose only HTTP status and sanitized issue codes; Vercel logs additionally include the PayPal debug ID for support. Do not log raw provider messages, recipient data or access tokens.
 - `PAYPAL_SELLER_USER_ID`: UUID from Supabase Authentication > Users for that freelancer. Set this after registering the seller; invoicing is blocked until it matches that user. The MVP restricts invoices to this one seller; multi-merchant partner onboarding is P1.
 - Create the webhook in that REST app with URL `https://YOUR_DOMAIN/api/webhooks/paypal` and copy its ID into `PAYPAL_WEBHOOK_ID`.
 - Subscribe to `INVOICING.INVOICE.PAID`, `INVOICING.INVOICE.REFUNDED`, `INVOICING.INVOICE.CANCELLED`, and `INVOICING.INVOICE.UPDATED`.

@@ -20,6 +20,52 @@ function response(body: unknown, status = 200) {
   });
 }
 describe("provider boundaries", () => {
+  it("reports safe PayPal issue codes without logging customer details", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        response({ access_token: "token", expires_in: 3600 }),
+      )
+      .mockResolvedValueOnce(
+        response({
+          id: "INV2-TEST",
+          status: "DRAFT",
+          amount: { currency_code: "USD", value: "220.00" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        response(
+          {
+            name: "UNPROCESSABLE_ENTITY",
+            debug_id: "test-debug-id",
+            message: "Private customer email private@example.com",
+            details: [
+              { issue: "INVALID_INVOICER", value: "private@example.com" },
+            ],
+          },
+          422,
+        ),
+      );
+    await expect(new PayPalGateway(config).send("INV2-TEST")).rejects.toThrow(
+      "HTTP 422; INVALID_INVOICER",
+    );
+    const output = JSON.stringify(log.mock.calls);
+    expect(output).toContain("test-debug-id");
+    expect(output).not.toContain("private@example.com");
+  });
+  it("handles non-JSON provider errors without exposing the response body", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        response({ access_token: "token", expires_in: 3600 }),
+      )
+      .mockResolvedValueOnce(
+        new Response("upstream private details", { status: 502 }),
+      );
+    await expect(new PayPalGateway(config).send("INV2-TEST")).rejects.toThrow(
+      "HTTP 502",
+    );
+  });
   it("uses a stable invoice idempotency key and a separate explicit send", async () => {
     const fetcher = vi
       .spyOn(globalThis, "fetch")
