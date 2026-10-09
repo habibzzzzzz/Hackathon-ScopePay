@@ -1,7 +1,22 @@
 import Link from "next/link";
 import { Brand } from "@/shared/presentation/components";
 import { env } from "@/shared/config/env";
-export default function Home() {
+import { redirect } from "next/navigation";
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const query = await searchParams;
+  const callback = new URLSearchParams();
+  for (const key of ["code", "token_hash", "type", "error", "error_code"])
+    if (typeof query[key] === "string") callback.set(key, query[key]);
+  if (
+    callback.has("code") ||
+    callback.has("token_hash") ||
+    callback.has("error")
+  )
+    redirect(`/auth/callback?${callback}`);
   const demo = env().APP_MODE === "demo";
   return (
     <div className="marketing">

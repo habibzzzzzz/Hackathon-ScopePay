@@ -15,9 +15,9 @@ export default async function Login({
         <h1>Welcome back</h1>
         <p>Review your scope and the work worth billing.</p>
         {query.confirmation === "failed" && (
-          <p className="error">
-            Confirmation link unavailable. Request a new confirmation through
-            registration.
+          <p className="error" role="alert">
+            This confirmation link has expired or could not be verified.{" "}
+            <Link href="/register">Request a new confirmation email</Link>.
           </p>
         )}
         <AuthForm demo={env().APP_MODE === "demo"} />

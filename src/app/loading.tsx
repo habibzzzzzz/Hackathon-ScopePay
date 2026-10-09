@@ -1,8 +1,8 @@
 import { Pending } from "@/shared/presentation/pending";
 export default function Loading() {
   return (
-    <div className="loading">
-      <Pending label="Loading your workspace..." />
-    </div>
+    <main id="main-content" className="auth-shell">
+      <Pending label="Loading ScopePay..." />
+    </main>
   );
 }

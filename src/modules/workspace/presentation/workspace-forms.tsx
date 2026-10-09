@@ -1,28 +1,34 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { post } from "@/shared/presentation/api-client";
 import { Field } from "@/shared/presentation/components";
+import { Pending } from "@/shared/presentation/pending";
 import { CURRENCIES, decimal, toMinor } from "@/shared/domain/money";
 import type { Client, Profile, Project } from "../domain/entities";
 
 function useSave() {
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
+  const [submitting, setBusy] = useState(false);
+  const [navigating, startTransition] = useTransition();
+  const busy = submitting || navigating;
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   async function save(
     body: unknown,
     destination?: (result: { id: string }) => string,
   ) {
+    if (busy) return;
     setBusy(true);
     setError("");
     setMessage("");
     try {
       const result = await post<{ id: string }>("/api/v1/workspace", body);
-      if (destination) router.push(destination(result));
-      else setMessage("Saved.");
-      router.refresh();
+      if (!destination) setMessage("Saved.");
+      startTransition(() => {
+        if (destination) router.push(destination(result));
+        router.refresh();
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Please retry.");
     } finally {
@@ -172,8 +178,17 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
         </Field>
       </div>
       <Feedback {...state} />
-      <button className="button primary" disabled={state.busy}>
-        {state.busy ? "Saving..." : "Save profile and pricing"}
+      <button
+        className="button primary"
+        disabled={state.busy}
+        aria-busy={state.busy}
+        aria-label={state.busy ? "Saving profile..." : undefined}
+      >
+        {state.busy ? (
+          <Pending label="Saving profile..." />
+        ) : (
+          "Save profile and pricing"
+        )}
       </button>
     </form>
   );
@@ -222,8 +237,13 @@ export function ClientForm() {
         <textarea name="notes" rows={3} maxLength={20000} />
       </Field>
       <Feedback {...state} />
-      <button className="button primary" disabled={state.busy}>
-        {state.busy ? "Saving..." : "Save client"}
+      <button
+        className="button primary"
+        disabled={state.busy}
+        aria-busy={state.busy}
+        aria-label={state.busy ? "Saving client..." : undefined}
+      >
+        {state.busy ? <Pending label="Saving client..." /> : "Save client"}
       </button>
     </form>
   );
@@ -401,12 +421,19 @@ export function ProjectForm({
         />
       </Field>
       <Feedback {...state} />
-      <button className="button primary" disabled={state.busy}>
-        {state.busy
-          ? "Saving..."
-          : project
-            ? "Save baseline"
-            : "Create project"}
+      <button
+        className="button primary"
+        disabled={state.busy}
+        aria-busy={state.busy}
+        aria-label={state.busy ? "Saving project..." : undefined}
+      >
+        {state.busy ? (
+          <Pending label="Saving project..." />
+        ) : project ? (
+          "Save baseline"
+        ) : (
+          "Create project"
+        )}
       </button>
     </form>
   );

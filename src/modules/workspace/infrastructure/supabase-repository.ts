@@ -37,7 +37,8 @@ function decode<K extends Table>(row: PersistenceRow<K>): Entities[K] {
     ...row.data,
     id: row.id,
     userId: row.user_id,
-    createdAt: row.created_at,
+    // RPC immutability compares snapshot JSON; PostgREST formats timestamps differently.
+    createdAt: row.data.createdAt,
   };
 }
 

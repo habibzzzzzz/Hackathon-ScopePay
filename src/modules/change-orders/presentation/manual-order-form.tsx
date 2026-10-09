@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { post } from "@/shared/presentation/api-client";
 import { Field } from "@/shared/presentation/components";
+import { Pending } from "@/shared/presentation/pending";
 import { toMinor } from "@/shared/domain/money";
 import type { Project } from "@/modules/workspace/domain/entities";
 export function ManualOrderForm({
@@ -13,7 +14,9 @@ export function ManualOrderForm({
   projectId?: string;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
+  const [submitting, setBusy] = useState(false);
+  const [navigating, startTransition] = useTransition();
+  const busy = submitting || navigating;
   const [error, setError] = useState("");
   const [selected, setSelected] = useState(projectId ?? projects[0]?.id ?? "");
   return (
@@ -21,6 +24,7 @@ export function ManualOrderForm({
       className="form-stack"
       onSubmit={async (e) => {
         e.preventDefault();
+        if (busy) return;
         const f = new FormData(e.currentTarget);
         setBusy(true);
         setError("");
@@ -35,8 +39,10 @@ export function ManualOrderForm({
               timelineDays: Number(f.get("timelineDays")),
             },
           });
-          router.push(`/app/change-orders/${result.id}`);
-          router.refresh();
+          startTransition(() => {
+            router.push(`/app/change-orders/${result.id}`);
+            router.refresh();
+          });
         } catch (e) {
           setError(e instanceof Error ? e.message : "Please retry.");
         } finally {
@@ -90,8 +96,13 @@ export function ManualOrderForm({
           {error}
         </p>
       )}
-      <button className="button primary" disabled={busy}>
-        {busy ? "Saving draft..." : "Create draft"}
+      <button
+        className="button primary"
+        disabled={busy}
+        aria-busy={busy}
+        aria-label={busy ? "Saving draft..." : undefined}
+      >
+        {busy ? <Pending label="Saving draft..." /> : "Create draft"}
       </button>
     </form>
   );

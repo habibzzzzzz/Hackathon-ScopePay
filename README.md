@@ -54,6 +54,8 @@ Configure repository environments, secrets, branch protection and `ENABLE_DEPLOY
 
 ## Scope and remaining work
 
+Authentication loading and email confirmation regression checks can be run with `npm run test:auth-ui`. Hosted email redirects require the Supabase Auth settings described in [environment setup](docs/environment-setup.md); database migrations do not configure those settings. The approval-link timestamp fix and its verification are recorded in [validation for 9 October](docs/validation-2026-10-09.md).
+
 P1 features such as PDF/DOCX import, payment reminders, payment intelligence, merchant onboarding and average payment time are deferred. Production operation also needs reviewed legal notices, retention/deletion procedures and operator contact details.
 
 Anti Slop is used in **After** mode as selected by the user. The audit is written after implementation; numbered findings are not silently fixed without the user's selection.

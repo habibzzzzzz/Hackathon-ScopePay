@@ -13,6 +13,7 @@ The repository contains the pipeline configuration. A local passing run does not
 5. Production dependency audit.
 6. Next.js production build.
 7. Playwright demo golden path, project setup, tenant isolation, client decisions and responsive routes.
+8. Authentication UI checks with fake live-mode credentials, including login, registration and confirmation resend loading states.
 
 Failed browser runs upload traces and screenshots as GitHub artifacts. No live credentials are needed for CI. Provider tests use fake HTTP responses; the database tests run real PostgreSQL semantics through PGlite with an Auth stub. Run a real Supabase and PayPal sandbox smoke test before releasing a hosted environment.
 

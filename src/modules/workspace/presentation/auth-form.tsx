@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { post } from "@/shared/presentation/api-client";
 import { Field } from "@/shared/presentation/components";
+import { Pending } from "@/shared/presentation/pending";
 export function AuthForm({
   register = false,
   demo,
@@ -11,11 +12,28 @@ export function AuthForm({
   demo: boolean;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
+  const [submitting, setBusy] = useState(false);
+  const [navigating, startTransition] = useTransition();
+  const busy = submitting || navigating;
+  const [pendingLabel, setPendingLabel] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  async function submit(body: unknown) {
+  async function submit(body: {
+    action: string;
+    email?: string;
+    password?: string;
+  }) {
+    if (busy) return;
     setBusy(true);
+    setPendingLabel(
+      body.action === "register"
+        ? "Creating account..."
+        : body.action === "resend"
+          ? "Sending confirmation email..."
+          : body.action === "demo"
+            ? "Opening workspace..."
+            : "Signing in...",
+    );
     setError("");
     setMessage("");
     try {
@@ -24,9 +42,14 @@ export function AuthForm({
         body,
       );
       if (result.redirect) {
-        router.push(result.redirect);
-        router.refresh();
-      } else setMessage(result.message ?? "Check your email.");
+        setPendingLabel("Opening your workspace...");
+        startTransition(() => {
+          router.replace(result.redirect!);
+          router.refresh();
+        });
+      } else {
+        setMessage(result.message ?? "Check your email.");
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Please retry.");
     } finally {
@@ -43,9 +66,11 @@ export function AuthForm({
         <button
           className="button primary full"
           disabled={busy}
+          aria-busy={busy}
+          aria-label={busy ? pendingLabel : undefined}
           onClick={() => submit({ action: "demo" })}
         >
-          {busy ? "Opening workspace..." : "Open demo workspace"}
+          {busy ? <Pending label={pendingLabel} /> : "Open demo workspace"}
         </button>
         {error && (
           <p className="error" role="alert">
@@ -57,13 +82,14 @@ export function AuthForm({
   return (
     <form
       className="form-stack"
+      aria-busy={busy}
       onSubmit={(e) => {
         e.preventDefault();
         const form = new FormData(e.currentTarget);
         void submit({
           action: register ? "register" : "login",
-          email: form.get("email"),
-          password: form.get("password"),
+          email: String(form.get("email") ?? "").trim(),
+          password: String(form.get("password") ?? ""),
         });
       }}
     >
@@ -74,6 +100,7 @@ export function AuthForm({
           autoComplete="email"
           required
           maxLength={254}
+          disabled={busy}
         />
       </Field>
       <Field label="Password" hint="At least 8 characters.">
@@ -84,6 +111,7 @@ export function AuthForm({
           minLength={8}
           maxLength={128}
           required
+          disabled={busy}
         />
       </Field>
       {error && (
@@ -92,9 +120,35 @@ export function AuthForm({
         </p>
       )}
       {message && <p role="status">{message}</p>}
-      <button className="button primary" disabled={busy}>
-        {busy ? "Please wait..." : register ? "Create account" : "Sign in"}
+      <button
+        className="button primary"
+        disabled={busy}
+        aria-busy={busy}
+        aria-label={busy ? pendingLabel : undefined}
+      >
+        {busy ? (
+          <Pending label={pendingLabel} />
+        ) : register ? (
+          "Create account"
+        ) : (
+          "Sign in"
+        )}
       </button>
+      {register && (
+        <button
+          type="button"
+          className="button secondary"
+          disabled={busy}
+          onClick={(event) => {
+            const form = event.currentTarget.form!;
+            const email = form.elements.namedItem("email") as HTMLInputElement;
+            if (!email.reportValidity()) return;
+            void submit({ action: "resend", email: email.value.trim() });
+          }}
+        >
+          Resend confirmation email
+        </button>
+      )}
     </form>
   );
 }

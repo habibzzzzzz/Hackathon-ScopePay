@@ -33,6 +33,7 @@ jobs:
       - run: npm run build
       - run: node scripts/tool.mjs playwright install --with-deps chromium
       - run: npm run test:e2e
+      - run: npm run test:auth-ui
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

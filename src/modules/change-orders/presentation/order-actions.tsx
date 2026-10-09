@@ -1,14 +1,17 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { post } from "@/shared/presentation/api-client";
 import { ActionButton } from "@/shared/presentation/action-button";
+import { Pending } from "@/shared/presentation/pending";
 import type { ChangeOrder } from "@/modules/workspace/domain/entities";
 
 export function OrderActions({ order }: { order: ChangeOrder }) {
   const router = useRouter();
   const [link, setLink] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [submitting, setBusy] = useState(false);
+  const [navigating, startTransition] = useTransition();
+  const busy = submitting || navigating;
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   return (
@@ -18,7 +21,10 @@ export function OrderActions({ order }: { order: ChangeOrder }) {
           <button
             className="button primary"
             disabled={busy}
+            aria-busy={busy}
+            aria-label={busy ? "Creating link..." : undefined}
             onClick={async () => {
+              if (busy) return;
               setBusy(true);
               setError("");
               try {
@@ -27,7 +33,7 @@ export function OrderActions({ order }: { order: ChangeOrder }) {
                   { action: "send", id: order.id },
                 );
                 setLink(`${window.location.origin}/c/${result.token}`);
-                router.refresh();
+                startTransition(() => router.refresh());
               } catch (e) {
                 setError(e instanceof Error ? e.message : "Please retry.");
               } finally {
@@ -35,7 +41,11 @@ export function OrderActions({ order }: { order: ChangeOrder }) {
               }
             }}
           >
-            {busy ? "Creating link..." : "Create client approval link"}
+            {busy ? (
+              <Pending label="Creating link..." />
+            ) : (
+              "Create client approval link"
+            )}
           </button>
         )}
         {order.status === "APPROVED" && (

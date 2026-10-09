@@ -14,6 +14,7 @@ import { ApplicationError } from "@/shared/errors/application-error";
 const inputSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("demo") }),
   z.object({ action: z.literal("logout") }),
+  z.object({ action: z.literal("resend"), email: z.email() }),
   z.object({
     action: z.literal("login"),
     email: z.email(),
@@ -55,6 +56,28 @@ export async function POST(request: Request) {
         "Use the demo workspace here. Email accounts require Supabase configuration.",
       );
     const client = await supabaseServer();
+    if (input.action === "resend") {
+      const { error } = await client.auth.resend({
+        type: "signup",
+        email: input.email,
+        options: {
+          emailRedirectTo: `${env().NEXT_PUBLIC_APP_URL}/auth/callback`,
+        },
+      });
+      if (error)
+        throw new ApplicationError(
+          "RESEND_FAILED",
+          "Confirmation email could not be sent. Wait a minute, then retry.",
+        );
+      return NextResponse.json({
+        data: {
+          redirect: null,
+          message:
+            "If this account needs confirmation, a new email has been sent. Check your inbox and spam folder.",
+        },
+        error: null,
+      });
+    }
     if (input.action === "login") {
       const { error } = await client.auth.signInWithPassword({
         email: input.email,

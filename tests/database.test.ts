@@ -1,6 +1,8 @@
 import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { SupabaseRepository } from "@/modules/workspace/infrastructure/supabase-repository";
 import {
   owner,
   clientId,
@@ -51,6 +53,64 @@ beforeAll(async () => {
 }, 60000);
 afterAll(async () => {
   await db?.close();
+});
+
+it("creates an approval link after PostgREST reformats the row timestamp", async () => {
+  await db.exec("begin");
+  try {
+    const record = orderFixture({
+      id: crypto.randomUUID(),
+      createdAt: "2026-10-09T00:00:00.000Z",
+    });
+    await db.query(
+      "insert into public.change_orders(id,user_id,created_at,data) values($1,$2,$3,$4::jsonb)",
+      [record.id, owner, record.createdAt, JSON.stringify(record)],
+    );
+    const row = {
+      id: record.id,
+      user_id: owner,
+      created_at: "2026-10-09T00:00:00+00:00",
+      data: record,
+    };
+    const query = {
+      select: () => query,
+      eq: () => query,
+      maybeSingle: async () => ({ data: row, error: null }),
+    };
+    const client = { from: () => query } as unknown as SupabaseClient;
+    const service = {
+      rpc: async (
+        _name: string,
+        args: { p_order: unknown; p_previous_status: string },
+      ) => {
+        const result = await db.query<{
+          data: ReturnType<typeof orderFixture>;
+        }>("select public.transition_order($1::jsonb,$2) as data", [
+          JSON.stringify(args.p_order),
+          args.p_previous_status,
+        ]);
+        return { data: result.rows[0].data, error: null };
+      },
+    } as unknown as SupabaseClient;
+    const repository = new SupabaseRepository(client, service);
+    const loaded = await repository.get("change_orders", record.id, owner);
+    expect(loaded?.createdAt).toBe(record.createdAt);
+    const sent = {
+      ...loaded!,
+      status: "SENT" as const,
+      tokenHash: "timestamp-regression-token",
+      tokenExpiresAt: "2026-10-16T00:00:00.000Z",
+    };
+    expect((await repository.transition(sent, "DRAFT")).status).toBe("SENT");
+    await expect(
+      repository.transition(
+        { ...sent, status: "VIEWED", amountMinor: sent.amountMinor + 1 },
+        "SENT",
+      ),
+    ).rejects.toThrow("Immutable order data");
+  } finally {
+    await db.exec("rollback");
+  }
 });
 
 describe("PostgreSQL migration and isolation", () => {

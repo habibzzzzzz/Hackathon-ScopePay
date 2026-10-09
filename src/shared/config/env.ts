@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { resolveAppUrl } from "./app-url";
 
 const schema = z.object({
   APP_MODE: z.enum(["demo", "live"]).default("demo"),
@@ -23,11 +24,12 @@ const schema = z.object({
 let cached: z.infer<typeof schema> | undefined;
 export function env() {
   if (cached) return cached;
-  const parsed = schema.parse(
-    Object.fromEntries(
+  const parsed = schema.parse({
+    ...Object.fromEntries(
       Object.entries(process.env).filter(([, value]) => value !== ""),
     ),
-  );
+    NEXT_PUBLIC_APP_URL: resolveAppUrl(process.env),
+  });
   if (parsed.APP_MODE === "live") {
     for (const key of [
       "NEXT_PUBLIC_SUPABASE_URL",

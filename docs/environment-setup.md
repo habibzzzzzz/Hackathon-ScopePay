@@ -20,7 +20,12 @@ Demo mode is intended for one local server process. Do not deploy the file-backe
 - Apply all files in `supabase/migrations/` in filename order to the intended project.
 - Enable Email authentication. Use email confirmation for live environments.
 - Set Auth Site URL to `NEXT_PUBLIC_APP_URL`; allow `${NEXT_PUBLIC_APP_URL}/auth/callback` in redirect URLs.
+- For this deployment, set Authentication > URL Configuration > Site URL to `https://hackathon-scope-pay.vercel.app` and add `https://hackathon-scope-pay.vercel.app/auth/callback` to Redirect URLs. A URL rejected by that allowlist can fall back to Site URL; leaving Site URL as localhost causes the reported email redirect failure.
+- In Authentication > Email Templates > Confirm signup, use [the confirmation template](../supabase/templates/confirmation.html). Its `RedirectTo` targets the callback supplied during registration/resend, and its token hash supports opening the email in a different browser. The callback also supports existing PKCE code links. Do not put the token hash in logs or analytics.
+- After changing URLs/template, request a new email using **Resend confirmation email** on the registration page. Previously delivered links pointing at localhost are not rewritten by a deployment.
 - Register the freelancer, confirm email, then complete profile and pricing settings.
+
+Application origin resolution uses the configured origin, normalizes a trailing slash, and uses Vercel's deployment domain when the value is absent or still localhost on Vercel. Live production rejects a remaining localhost or non-HTTPS origin. Explicit preview origins still need their own Supabase redirect allowlist entries. Supabase dashboard Auth configuration is separate from SQL migrations and cannot be changed using the database URI or application secret key.
 
 The migration embeds baseline and request snapshots in JSONB aggregates. Generated columns, composite foreign keys, RLS and transaction functions enforce ownership and financial relationships. Optional document storage and normalized scope-item/milestone tables are deferred until import and milestone workflows exist.
 
