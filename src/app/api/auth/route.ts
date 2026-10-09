@@ -73,7 +73,7 @@ export async function POST(request: Request) {
         data: {
           redirect: null,
           message:
-            "If this account needs confirmation, a new email has been sent. Check your inbox and spam folder.",
+            "If this account needs confirmation, check your inbox and spam folder. If you already confirmed it, sign in with your email and password.",
         },
         error: null,
       });
@@ -109,7 +109,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       data: {
         redirect: data.session ? "/app/settings" : null,
-        message: "Check your email to confirm your account, then sign in.",
+        message:
+          "If your account needs confirmation, check your email. If you already confirmed it, sign in with your email and password.",
       },
       error: null,
     });
