@@ -39,6 +39,7 @@ yarn-error.log*
 /test-results/
 /artifacts/
 /.tmp/
+/supabase/.temp/
 /.playwright-browsers/
 /tests/.tmp-workspace-*/
 
